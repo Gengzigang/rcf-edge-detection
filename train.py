@@ -5,11 +5,13 @@ from data_loader import BSDS_RCFLoader
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import torch
-
+#os.environ["CUDA_VISIBLE_DEVICES"]="1,2,3"
+device = torch.device("cuda:0")
 model = models.resnet101(pretrained=True)
-model = torch.nn.DataParallel(model, device_ids=(1,2,3)).cuda()
+model = torch.nn.DataParallel(model, device_ids=(0,1,2,3))
+model.to(device)
 init_lr = 1e-2
-batch_size = 16
+batch_size = 4
 
 # resume = 'ckpt/40001.pth'
 # checkpoint = torch.load(resume)
@@ -37,7 +39,7 @@ cudnn.enabled = True
 train_dataset = BSDS_RCFLoader(split="train")
 # test_dataset = BSDS_RCFLoader(split="test")
 train_loader = DataLoader(
-    train_dataset, batch_size=batch_size*3,
+    train_dataset, batch_size=batch_size*4,
     num_workers=8, drop_last=True, shuffle=True)
 
 
@@ -56,7 +58,7 @@ def cross_entropy_loss_RCF(prediction, label):
     # print(1.0 * num_negative / (num_positive + num_negative), 1.1 * num_positive / (num_positive + num_negative))
 
     cost = torch.nn.functional.binary_cross_entropy(
-            prediction.float(),label.float(), weight=mask, reduce=False)
+            prediction.float(),label.float(), weight=mask, reduce=False).to(device)
     return torch.sum(cost) / (num_negative + num_positive)
 
 
@@ -74,7 +76,7 @@ for epoch in range(total_epoch):
     for i, (image, label) in enumerate(train_loader):
         cnt += 1
         optim = make_optim(model, adjust_lr(init_lr, cnt, total_iter))
-        image, label = image.cuda(), label.cuda()
+        image, label = image.to(device), label.to(device)
         outs = model(image, label.size()[2:])
         # total_loss = 0
         total_loss = cross_entropy_loss_RCF(outs[-1], label)
