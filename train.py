@@ -3,11 +3,13 @@ import models
 import os
 from data_loader import BSDS_RCFLoader
 from torch.utils.data import DataLoader
+import torch.backends.cudnn as cudnn
+import torch
 
-model = models.resnet101(pretrained=True).cuda()
-
+model = models.resnet101(pretrained=True)
+model = torch.nn.DataParallel(model, device_ids=(1,2,3)).cuda()
 init_lr = 1e-2
-batch_size = 3
+batch_size = 16
 
 # resume = 'ckpt/40001.pth'
 # checkpoint = torch.load(resume)
@@ -28,11 +30,14 @@ def save_ckpt(model, name):
         os.mkdir('ckpt')
     torch.save(model.state_dict(), os.path.join('ckpt', '{}.pth'.format(name)))
 
+cudnn.benchmark = True
+cudnn.deterministic = False
+cudnn.enabled = True
 
 train_dataset = BSDS_RCFLoader(split="train")
 # test_dataset = BSDS_RCFLoader(split="test")
 train_loader = DataLoader(
-    train_dataset, batch_size=batch_size,
+    train_dataset, batch_size=batch_size*3,
     num_workers=8, drop_last=True, shuffle=True)
 
 
