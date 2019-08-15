@@ -42,28 +42,29 @@ with torch.no_grad():
     for i, (image, ori, img_files) in enumerate(test_loader):
         h, w = ori.size()[2:]
         image = image.to(device)
-        name = img_files[0][5:-4]
 
         outs = model(image, (h, w))
-        fuse = outs[-1].squeeze().detach().cpu().numpy()
 
+
+        fuse = outs[-1].squeeze().detach().cpu().numpy()
         outs.append(ori)
 
         idx = 0
         print('working on .. {}'.format(i))
-
-        for result in outs:
-            idx += 1
-            result = result.squeeze().detach().cpu().numpy()
-            print(result.shape)
-            if len(result.shape) == 3:
-                result = result.transpose(1, 2, 0).astype(np.uint8)
-                result = result[:, :, [2, 1, 0]]
-                Image.fromarray(result).save(os.path.join(all_folder, '{}-img.jpg'.format(name)))
-            else:
-                result = (result * 255).astype(np.uint8)
-                Image.fromarray(result).save(os.path.join(all_folder, '{}-{}.png'.format(name, idx)))
-        Image.fromarray((fuse * 255).astype(np.uint8)).save(os.path.join(png_folder, '{}.png'.format(name)))
-        io.savemat(os.path.join(mat_folder, '{}.mat'.format(name)), {'result': fuse})
+        for j in range(outs[0].shape[0]):
+            name = img_files[j][5:-4]
+            for result in outs:
+                idx += 1
+                result[j] = result[j].squeeze().detach().cpu().numpy()
+                print(result[j].shape)
+                if len(result[j].shape) == 3:
+                    result[j] = result[j].transpose(1, 2, 0).astype(np.uint8)
+                    result[j] = result[j][:, :, [2, 1, 0]]
+                    Image.fromarray(result[j]).save(os.path.join(all_folder, '{}-img.jpg'.format(name)))
+                else:
+                    result[j] = (result[j] * 255).astype(np.uint8)
+                    Image.fromarray(result[j]).save(os.path.join(all_folder, '{}-{}.png'.format(name, idx)))
+            Image.fromarray((fuse[j] * 255).astype(np.uint8)).save(os.path.join(png_folder, '{}.png'.format(name)))
+            io.savemat(os.path.join(mat_folder, '{}.mat'.format(name)), {'result': fuse[j]})
     print('finished.')
 
