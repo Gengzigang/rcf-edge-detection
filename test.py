@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader
 from PIL import Image
 import scipy.io as io
 
-resume = 'ckpt/lr-0.01-iter-490000.pth'
+device = torch.device("cuda:0")
+resume = '/mnt/ckpt/only-final-lr-0.01-iter-50000.pth'
 folder = 'results/val/'
 all_folder = os.path.join(folder, 'all')
 png_folder = os.path.join(folder, 'png')
@@ -23,7 +24,9 @@ except Exception:
     print('dir already exist....')
     pass
 
-model = models.resnet101(pretrained=False).cuda()
+model = models.resnet101(pretrained=False)
+model = torch.nn.DataParallel(model, device_ids=(0,1,2,3))
+model.to(device)
 model.eval()
 
 #resume..
@@ -32,13 +35,13 @@ model.load_state_dict(checkpoint)
 
 test_dataset = BSDS_RCFLoader(split="test")
 test_loader = DataLoader(
-    test_dataset, batch_size=batch_size,
+    test_dataset, batch_size=batch_size*4,
     num_workers=1, drop_last=True, shuffle=False)
 
 with torch.no_grad():
     for i, (image, ori, img_files) in enumerate(test_loader):
         h, w = ori.size()[2:]
-        image = image.cuda()
+        image = image.to(device)
         name = img_files[0][5:-4]
 
         outs = model(image, (h, w))
