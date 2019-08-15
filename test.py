@@ -48,14 +48,14 @@ with torch.no_grad():
 
         fuse = outs[-1].squeeze().detach().cpu().numpy()
         outs.append(ori)
-
+        
         idx = 0
         print('working on .. {}'.format(i))
         for j in range(outs[0].shape[0]):
             name = img_files[j][5:-4]
             for result in outs:
                 idx += 1
-                result[j] = result[j].squeeze().detach().cpu().numpy()
+                result = result.squeeze().detach().cpu().numpy()
                 print(result[j].shape)
                 if len(result[j].shape) == 3:
                     result[j] = result[j].transpose(1, 2, 0).astype(np.uint8)
