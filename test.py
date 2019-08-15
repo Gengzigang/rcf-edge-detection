@@ -25,7 +25,7 @@ except Exception:
     pass
 
 model = models.resnet101(pretrained=False)
-model = torch.nn.DataParallel(model, device_ids=(0,1,2,3))
+model = torch.nn.DataParallel(model, device_ids=(0,))
 model.to(device)
 model.eval()
 
@@ -35,7 +35,7 @@ model.load_state_dict(checkpoint)
 
 test_dataset = BSDS_RCFLoader(split="test")
 test_loader = DataLoader(
-    test_dataset, batch_size=batch_size*4,
+    test_dataset, batch_size=batch_size,
     num_workers=1, drop_last=True, shuffle=False)
 
 with torch.no_grad():
