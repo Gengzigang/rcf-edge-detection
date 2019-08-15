@@ -33,7 +33,7 @@ class BSDS_RCFLoader(data.Dataset):
         if self.split == 'train':
             self.filelist = join(self.root, 'bsds_pascal_train_pair.lst')
         elif self.split == 'test':
-            self.filelist = join(self.bsds_root, 'test.lst')
+            self.filelist = join(self.root, 'test.lst')
         else:
             raise ValueError("Invalid split type!")
         with open(self.filelist, 'r') as f:
@@ -74,7 +74,7 @@ class BSDS_RCFLoader(data.Dataset):
             img = prepare_image_cv2(img)
             return img, lb
         else:
-            original_img = np.array(cv2.imread(join(self.bsds_root, img_file)), dtype=np.float32)
+            original_img = np.array(cv2.imread(join(self.root, img_file)), dtype=np.float32)
             img = prepare_image_cv2(original_img)
             original_img = original_img.transpose(2, 0, 1)
             return img, original_img, img_file

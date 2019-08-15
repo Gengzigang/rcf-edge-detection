@@ -55,6 +55,7 @@ with torch.no_grad():
         for result in outs:
             idx += 1
             result = result.squeeze().detach().cpu().numpy()
+            print(result.shape)
             if len(result.shape) == 3:
                 result = result.transpose(1, 2, 0).astype(np.uint8)
                 result = result[:, :, [2, 1, 0]]
